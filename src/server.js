@@ -1,6 +1,8 @@
 require('express-async-errors')
 
 const express = require('express') // importing express library
+const sqliteConnection = require('./database/sqlite')
+
 
 const api = express()
 api.use(express.json())
@@ -12,8 +14,10 @@ api.listen(port, () => {
 })
 
 const routes = require('./routes') 
-
 api.use(routes)
+
+sqliteConnection()
+
 
 api.use((error, request, response, next) => { // setting an error message
 
