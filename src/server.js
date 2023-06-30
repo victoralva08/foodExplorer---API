@@ -8,14 +8,14 @@ api.use(express.json())
 const port = 4444
 
 api.listen(port, () => { 
-    console.log(`Server is running on Port ${port}.`)
+    console.log(`Server running on Port ${port}.`)
 })
 
 const routes = require('./routes') 
 
-app.use(routes)
+api.use(routes)
 
-app.use((error, request, response, next) => { // setting an error message
+api.use((error, request, response, next) => { // setting an error message
 
     if(error instanceof AppError)
     {
