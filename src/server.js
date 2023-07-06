@@ -1,8 +1,8 @@
 require('express-async-errors')
+const AppError = require('./appError/AppError')
 
 const express = require('express') // importing express library
 const sqliteConnection = require('./database/sqlite')
-
 
 const api = express()
 api.use(express.json())

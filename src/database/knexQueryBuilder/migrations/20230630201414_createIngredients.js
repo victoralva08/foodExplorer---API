@@ -6,7 +6,6 @@ exports.up = async function(knex) {
   
       table.text('name').notNullable()
       
-      table.integer('user_id').references('id').inTable('users').onDelete('CASCADE')
       table.integer('dish_id').references('id').inTable('dishes').onDelete('CASCADE')
       
     })

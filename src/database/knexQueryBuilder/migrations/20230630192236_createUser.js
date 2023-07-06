@@ -2,7 +2,7 @@ exports.up = async function(knex) {
 
         await knex.schema.createTable( 'users', table => {
 
-        table.boolean("isAdmin").default(0)
+        table.boolean("isAdmin")
         table.increments('id').primary()
 
         table.text('name').notNullable()

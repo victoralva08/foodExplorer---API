@@ -5,9 +5,7 @@ exports.up = async function(knex) {
       table.increments('id').primary()
   
       table.text('name').notNullable()
-      table.text('category').notNullable()
       table.text('description').notNullable()
-      table.text('ingredients').notNullable()
       table.text('price').notNullable()
 
       table.text('avatar').notNullable()
