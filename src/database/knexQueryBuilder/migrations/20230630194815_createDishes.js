@@ -8,7 +8,7 @@ exports.up = async function(knex) {
       table.text('description').notNullable()
       table.text('price').notNullable()
 
-      table.text('avatar').notNullable()
+      table.text('image').notNullable()
       
       table.timestamp('created_at').default(knex.fn.now())
       table.timestamp('updated_at').default(knex.fn.now())

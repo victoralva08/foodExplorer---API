@@ -1,5 +1,5 @@
 const knex = require("../database/knexQueryBuilder")
-const AppError = require('../appError/AppError.js')
+const AppError = require('../utils/AppError.js')
 const { hash, compare } = require('bcrypt')
 
 class UsersController {
@@ -32,7 +32,7 @@ class UsersController {
 
     async updateUser(request, response) {
         const { name, email, password, newPassword } = request.body
-        const { user_id } = request.params
+        const user_id  = request.user.id
 
         // checking if the user exists
 

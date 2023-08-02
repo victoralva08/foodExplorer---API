@@ -4,8 +4,8 @@ class DishesController {
 
     async createDish(request, response) {
 
-        const { name, categories, description, ingredients, price } = request.body
-        const { user_id } = request.params
+        const { name, description, ingredients, price } = request.body
+        const user_id  = request.user.id
 
         // capturing the dish_id for ingredients, category and price tables
 
@@ -13,22 +13,11 @@ class DishesController {
             name,
             description,
             price,
-            avatar: "avatar",
+            image: "dish_image",
             user_id
         })
 
         const dish_id = dish_id_array[0]
-
-        // inserting category(ies)
-
-        const categoriesInsert = categories.map( category => {
-            return {
-                category,
-                dish_id
-            }
-        })
-     
-        await knex('categories').insert(categoriesInsert)
 
         // inserting ingredients and prices values
 
@@ -55,12 +44,10 @@ class DishesController {
     
         const dish = await knex('dishes').where({ id: dish_id }).first()
         const ingredients = await knex('ingredients').where({ dish_id }).orderBy('name')
-        const categories = await knex('categories').where({ dish_id }).orderBy('created_at')
     
         return response.json({
             dish,
-            ingredients,
-            categories
+            ingredients
         })
         
     }
@@ -78,8 +65,8 @@ class DishesController {
 
     async filterDishes(request, response) {
 
-        const {  } = request.body
-        const { user_id, dishName, categories, ingredients } = request.query
+        const {dishName, categories, ingredients } = request.query
+        const user_id = request.user.id
 
         let dishes
 
