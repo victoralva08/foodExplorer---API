@@ -1,25 +1,33 @@
+
 require('express-async-errors')
 const AppError = require('./utils/AppError')
+require('dotenv/config')
+
 
 const express = require('express') // importing express library
 const sqliteConnection = require('./database/sqlite')
 
-const api = express()
-api.use(express.json())
+const app = express()
+app.use(express.json())
 
-const port = 4444
+const cors = require('cors')
+app.use(cors()) // cors library for back and frontend connection
 
-api.listen(port, () => { 
+const uploadConfig = require('./imageConfig/upload.js')
+
+const port = process.env.API_PORT ||4444
+
+app.listen(port, () => { 
     console.log(`Server running on Port ${port}.`)
 })
 
 const routes = require('./routes') 
-api.use(routes)
+app.use(routes)
 
 sqliteConnection()
 
 
-api.use((error, request, response, next) => { // setting an error message
+app.use((error, request, response, next) => { // setting an error message
 
     if(error instanceof AppError)
     {
@@ -37,3 +45,5 @@ api.use((error, request, response, next) => { // setting an error message
     })
 
 })
+
+app.use("/files", express.static(uploadConfig.UPLOADS_FOLDER))

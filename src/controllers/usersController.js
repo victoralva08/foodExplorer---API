@@ -84,6 +84,16 @@ class UsersController {
         return response.status(200).json()
 
     }
+
+    async getUserAdminValue(request, response) {
+       
+        const user_id  = request.user.id
+
+        const user = await knex("users").where({ id: user_id })
+      
+        return response.json(user[0].isAdmin)
+
+    }
 }
 
 module.exports = UsersController

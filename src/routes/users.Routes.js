@@ -8,5 +8,6 @@ const ensureAuthenticated = require('../middleware/ensureAuthenticated')
 
 usersRoutes.post('/', usersController.createUser)
 usersRoutes.put('/', ensureAuthenticated, usersController.updateUser)
+usersRoutes.get('/', ensureAuthenticated, usersController.getUserAdminValue)
 
 module.exports = usersRoutes

@@ -14,13 +14,6 @@ const MULTER_OBJECT = {
         destination: TMP_FOLDER,
         filename(request, file, callback) {
 
-            const fileExtension = String(file.originalname.split('.')[1])
-            console.log(fileExtension)
-
-            if (fileExtension !== 'png' && fileExtension !== 'jpg' && fileExtension !== 'gif' && fileExtension !== 'jpeg') {
-            return callback(new AppError('Please, upload a valid image file.'))
-            }
-
             filehash = crypto.randomBytes(10).toString("hex")
             filename = `${filehash}-${file.originalname}`
         

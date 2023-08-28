@@ -1,16 +1,18 @@
 const knex = require("../database/knexQueryBuilder")
+const AppError = require('../utils/AppError')
 
 class DishesController {
 
     async createDish(request, response) {
 
-        const { name, description, ingredients, price } = request.body
+        const { name, category, description, ingredients, price } = request.body
         const user_id  = request.user.id
 
         // capturing the dish_id for ingredients, category and price tables
 
         const dish_id_array = await knex('dishes').insert({
             name,
+            category,
             description,
             price,
             image: "dish_image",
@@ -30,12 +32,7 @@ class DishesController {
 
         await knex('ingredients').insert(ingredientsInsert)
 
-        await knex('prices').insert({
-            price,
-            dish_id
-        })
-
-        return response.json();
+        return response.json(dish_id);
     }
 
     async showDishes(request, response) {
@@ -43,8 +40,16 @@ class DishesController {
         const { dish_id } = request.params
     
         const dish = await knex('dishes').where({ id: dish_id }).first()
-        const ingredients = await knex('ingredients').where({ dish_id }).orderBy('name')
-    
+        const ingredientsResponse = await knex('ingredients').select('name').where({ dish_id }).orderBy('name')
+
+        // knex response returns an array of ingredients objects. In these next lines, those objects (with the ingredients' names as properties) are being added to an array (ingredients) to be treated on frontend manipulation.
+
+        let ingredients = []
+
+        ingredientsResponse.map( ingredientProp => {
+            ingredients = [ ...ingredients, ingredientProp.name ]
+        })
+        
         return response.json({
             dish,
             ingredients
@@ -65,49 +70,26 @@ class DishesController {
 
     async filterDishes(request, response) {
 
-        const {dishName, categories, ingredients } = request.query
-        const user_id = request.user.id
+        const { dishNameOrIngredients } = request.query
 
         let dishes
 
         const ingredientsTable = await knex('ingredients')
-        const categoriesTable = await knex('categories')
 
-        if (categories) {
-
-            const filterByCategory = categories.split(',').map( category => category.trim() )
-
-            dishes = await knex('categories')
-            .innerJoin('dishes', 'dishes.id', 'categories.dish_id')
-            .select([ // which dish properties will be displayed as response
+        if (dishNameOrIngredients) { // if the ingredients were informed in the request object
+  
+            dishes = await knex('dishes')
+            .select([
                 'dishes.id',
                 'dishes.name',
+                'dishes.description',
+                'dishes.image',
                 'dishes.price',
                 'dishes.user_id'
             ])
-            .where('dishes.user_id', user_id)
-            .whereLike('dishes.name', `%${dishName}%`)
-            .whereIn('categories.category', filterByCategory)
-            .orderBy('dishes.name')
-            .groupBy('dishes.id')
-
-        }
-        
-        if (ingredients) { // if the ingredients were informed in the request object
-
-            const filterByIngredients = ingredients.split(',').map( ingredient => ingredient.trim() )
-
-            dishes = await knex('ingredients')
-            .innerJoin('dishes', 'dishes.id', 'ingredients.dish_id')
-            .select([ // which dish properties will be displayed as response
-                'dishes.id',
-                'dishes.name',
-                'dishes.price',
-                'dishes.user_id'
-            ])
-            .where('dishes.user_id', user_id)
-            .whereLike('dishes.name', `%${dishName}%`)
-            .whereIn('ingredients.name', filterByIngredients)
+            .innerJoin('ingredients', 'ingredients.dish_id', 'dishes.id')
+            .where('ingredients.name', 'like', `%${dishNameOrIngredients}%`)
+            .orWhere('dishes.name', 'like', `%${dishNameOrIngredients}%`)
             .orderBy('dishes.name')
             .groupBy('dishes.id')
 
@@ -117,13 +99,13 @@ class DishesController {
             .select([ // which dish properties will be displayed as response
                 'dishes.id',
                 'dishes.name',
+                'dishes.category',
+                'dishes.image',
+                'dishes.description',
                 'dishes.price',
                 'dishes.user_id'
             ])
-            .where({ user_id })
-            .whereLike('name', `%${dishName}%`)
-            .orderBy('id')
-
+            .orderBy('name','asc')
         }
 
         const dishesWithIngredientes = dishes.map(dish => {
@@ -131,19 +113,86 @@ class DishesController {
             const dishIngredients = ingredientsTable.filter(ingredient => ingredient.dish_id === dish.id)  
             const dishIngredientsName = dishIngredients.map(filteredIngredients => filteredIngredients.name)
 
-            const dishCategories = categoriesTable.filter(category => category.dish_id === dish.id)  
-            const dishCategoriesName = dishCategories.map(filteredCategories => filteredCategories.category)
 
             return {
                 ...dish,
                 ingredients: dishIngredientsName,
-                categories: dishCategoriesName
             }
 
         })
 
         return response.json(dishesWithIngredientes)
         
+    }
+
+    async updateDish(request, response) {
+
+        const { name, category, ingredients, price, description } = request.body
+        const { dish_id }  = request.params
+
+        // checking if the dish exists
+
+        const dishExists = await knex('dishes').where({ id: dish_id }).first()
+
+        if(!dishExists) {
+            throw new AppError("This dish is not registered.")
+        }
+
+        const dishNameAlreadyRegistered = await knex('dishes').where({ name }).first()
+
+        if ( dishNameAlreadyRegistered && dishNameAlreadyRegistered.id != dish_id ) {
+            throw new AppError("A dish with this name is already registered.")
+        }
+
+        // checking if the user wishes to update its name and email values
+
+        const dishName = name ?? dishExists.name
+        const dishCategory = category ?? dishExists.category
+        const dishIngredients = ingredients ?? dishExists.ingredients
+        const dishPrice = price ?? dishExists.price
+        const dishDescription = description ?? dishExists.description
+ 
+        // updating values in database table
+
+        await knex("dishes").where({ id: dish_id })
+        .update({
+
+            name: dishName,
+            category: dishCategory,
+            price: dishPrice,
+            description: dishDescription,
+            updated_at: knex.fn.now()
+
+        })
+
+        /* 
+        The previous ingredients are deleted for replacement.
+        As the ingredients are stored in an array, we must request to add them in the table for each item (ingredient) from the array.
+        If we simply apply the update method, only the last array item (ingredient) will be stored with the correspondent dish_id.
+        For avoiding that, the ingredients have to be deleted and added all over again, thus including new or changed ones.
+         */
+        await knex('ingredients')
+        .where({ dish_id }) 
+        .del()
+
+        /* 
+        The ingnredientsUpdate array will store the ingredients objects (with the correspondent dish_id) which will be added in the ingredients
+        table.
+        */
+        const ingredientsUpdate = dishIngredients.map( ingredient => {
+            return {
+                name: ingredient,
+                dish_id
+            }
+        })
+
+        ingredientsUpdate.map(async ingredientProps => {
+            await knex('ingredients')
+            .insert(ingredientProps)
+        })
+
+        return response.status(200).json()
+
     }
      
 }
