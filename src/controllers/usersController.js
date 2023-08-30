@@ -2,29 +2,19 @@ const knex = require("../database/knexQueryBuilder")
 const AppError = require('../utils/AppError.js')
 const { hash, compare } = require('bcrypt')
 
+const UserRespository = require('../repositories/UserRepository.js')
+const UserCreateServices = require('../services/UserCreateService')
+
 class UsersController {
 
     async createUser(request, response) {
 
         const { isAdmin, name, email, password } = request.body // capturing user's properties
 
-        // For the case which the user is already registered:
+        const userRepository = new UserRespository()
+        const userCreateService = new UserCreateServices(userRepository)
 
-        const UserExists = await knex('users').where({ email }).first()  // loading a connection with database
-
-        if(UserExists) {
-            throw new AppError("This email is already registered")
-        }
-
-        const cypheredPassword = await hash(password, 8)
-
-        await knex('users')
-        .insert({
-            isAdmin: isAdmin ?? 0,
-            name,
-            email,
-            password: cypheredPassword
-        })
+        await userCreateService.execute({ isAdmin, name, email, password })
 
         return response.status(201).json()
 
