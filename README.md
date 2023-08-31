@@ -28,7 +28,7 @@ Its backend consumes its own API RESTful, which was developed with Node.JS and E
 You can access and experiment the project through this [link](https://64f0af262211da63eb6019bd--benevolent-twilight-40344b.netlify.app). 
 
 
-Access its Frontend [here](https://github.com/victoralva08/foodExplorer---API). 
+Access its Frontend [here](https://github.com/victoralva08/foodExplorer---Frontend). 
 
 Default admin access:
 
