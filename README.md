@@ -25,7 +25,7 @@
 
 Its backend consumes its own API RESTful, which was developed with Node.JS and Express. An SQLite database is also used to store all application's data. 
 
-You can access and experiment the project through this [link](https://64efa677aea1c30509284e13--benevolent-twilight-40344b.netlify.app). 
+You can access and experiment the project through this [link](https://64f0af262211da63eb6019bd--benevolent-twilight-40344b.netlify.app). 
 
 
 Access its Frontend [here](https://github.com/victoralva08/foodExplorer---API). 
