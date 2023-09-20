@@ -17,8 +17,9 @@ class UserCreateService {
             throw new AppError("This email is already registered")
         }
 
-        const cypheredPassword = await hash(String(password), 8)
-        const userCreated = await this.userRepository.createUser({ isAdmin, name, email, cypheredPassword })
+        const hashedPassword = await hash(password, 8)
+        console.log(hashedPassword)
+        const userCreated = await this.userRepository.createUser({ isAdmin, name, email, hashedPassword })
 
         return userCreated
 

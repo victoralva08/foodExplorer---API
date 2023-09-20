@@ -10,14 +10,14 @@ class UserRespository {
     }
 
 
-    async createUser({ isAdmin, name, email, password  }) {
+    async createUser({ isAdmin, name, email, hashedPassword  }) {
 
         const user_id = await knex('users')
         .insert({
             isAdmin: isAdmin ?? 0,
             name,
             email,
-            password
+            password: hashedPassword
         })
 
         return { id: user_id }
