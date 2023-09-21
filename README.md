@@ -44,10 +44,10 @@ You may also execute the application backend in a local machine by following the
 git clone https://github.com/victoralva08/foodExplorer---API
 ```
 ``` 
-$ npm install
+npm install
 ```
 ``` 
-$ npm run dev
+npm run dev
 ```
 
 ## 📞 Contact
